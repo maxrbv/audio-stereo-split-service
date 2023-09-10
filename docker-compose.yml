@@ -9,4 +9,15 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "6432:5432"
+      - "${POSTGRES_PORT}:5432"
+  rabbitmq:
+    container_name: "rabbitmq"
+    image: rabbitmq:3-management
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=maxrbv
+      - RABBITMQ_DEFAULT_PASS=maxrbv
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "15672:15672"
