@@ -16,8 +16,8 @@ services:
     hostname: rabbitmq
     restart: always
     environment:
-      - RABBITMQ_DEFAULT_USER=maxrbv
-      - RABBITMQ_DEFAULT_PASS=maxrbv
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
       - "${RABBITMQ_PORT}:5672"
       - "15672:15672"
