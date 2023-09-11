@@ -60,6 +60,7 @@ class S3Manager:
             return f's3://{self.bucket_name}/{filename}'
         except Exception as e:
             print(f"Error uploading to S3: {e}")
+            raise e
 
     async def _get_all_buckets(self) -> list[str]:
         """
