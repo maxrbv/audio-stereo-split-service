@@ -1,11 +1,7 @@
-import asyncio
-
+from botocore.exceptions import ClientError
 from pydub import AudioSegment
 
-import aioboto3
-from botocore.exceptions import ClientError
-
-from src.settings import BUCKET_NAME
+from settings import BUCKET_NAME
 
 
 class S3Manager:
@@ -15,19 +11,23 @@ class S3Manager:
 
     async def create_bucket(self, region: str = 'us-east-1'):
         """
-        Create an S3 bucket in a specified region asynchronously.
+        Create an S3 bucket in a specified region asynchronously
 
-        If a region is not specified, the bucket is created in the S3 default region (us-east-1).
+        If a region is not specified, the bucket is created in the S3 default region (us-east-1)
 
-        :param bucket_name: The name of the bucket to create.
-        :param region: The AWS region where the bucket should be created, e.g., 'us-west-2'.
+        :param region: The AWS region where the bucket should be created, e.g., 'us-west-2'
         """
         try:
+            # Get a list of all existing buckets
             buckets = await self._get_all_buckets()
+
+            # Check if the bucket already exists
             if self.bucket_name not in buckets:
                 if region is None:
+                    # Create the bucket in the default region (us-east-1)
                     await self.s3_client.create_bucket(Bucket=self.bucket_name)
                 else:
+                    # Create the bucket in the specified region
                     location = {'LocationConstraint': region}
                     await self.s3_client.create_bucket(
                         Bucket=self.bucket_name,
@@ -66,7 +66,7 @@ class S3Manager:
 
     async def _get_all_buckets(self) -> list[str]:
         """
-        Get all local S3 buckets.
+        Retrieve a list of all S3 buckets associated with the configured S3 client
         """
         try:
             response = await self.s3_client.list_buckets()
