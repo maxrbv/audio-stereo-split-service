@@ -61,9 +61,6 @@ class S3Manager:
         except Exception as e:
             print(f"Error uploading to S3: {e}")
 
-    async def check_exist(self):
-        ...
-
     async def _get_all_buckets(self) -> list[str]:
         """
         Retrieve a list of all S3 buckets associated with the configured S3 client
