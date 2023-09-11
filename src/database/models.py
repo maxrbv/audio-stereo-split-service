@@ -15,6 +15,7 @@ class RequestHistory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     request_time = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    audio_hash = Column(String, index=True, nullable=False)
 
     # Define a foreign key relationship with the FilesInfo model
     audio_file_id = Column(Integer, ForeignKey('files_info.id'))

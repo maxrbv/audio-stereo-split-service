@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -31,7 +33,7 @@ class DBManager:
         """
         await self.engine.dispose()
 
-    async def create_empty_file_info(self):
+    async def create_empty_file_info(self) -> int:
         """
         Create an empty FilesInfo record in the database and return its ID
 
@@ -69,16 +71,61 @@ class DBManager:
             await self.cur_session.rollback()
             raise e
 
-    async def add_request_info(self, audio_file_id: int):
+    async def add_request_info(self, audio_hash: str, audio_file_id: int):
         """
         Add a RequestHistory record with the given audio_file_id
 
+        :param audio_hash: The hash of the audio file associated with the request
         :param audio_file_id: The ID of the audio file associated with the request
         """
         try:
-            request_info = RequestHistory(audio_file_id=audio_file_id)
+            request_info = RequestHistory(audio_hash=audio_hash, audio_file_id=audio_file_id)
             self.cur_session.add(request_info)
             await self.cur_session.commit()
+        except Exception as e:
+            await self.cur_session.rollback()
+            raise e
+
+    async def get_urls_by_id(self, file_id: int) -> tuple[str, str]:
+        """
+        Retrieve S3 URLs by file ID from the database
+
+        :param file_id: The ID of the file to retrieve S3 URLs for
+        :return: A tuple containing two S3 URLs (s3_url_1 and s3_url_2)
+        """
+        try:
+            # Fetch the file record by file_id
+            file_info = await self.cur_session.get(FilesInfo, file_id)
+
+            if file_info:
+                return file_info.s3_url_1, file_info.s3_url_2
+
+            # If the file is not found, raise an HTTPException with a 404 status code
+            raise HTTPException(status_code=404, detail=f"File with ID {file_id} not found")
+        except Exception as e:
+            await self.cur_session.rollback()
+            raise e
+
+    async def get_id_by_hash(self, file_hash: str) -> int | None:
+        """
+        Retrieve the audio file ID associated with a given file hash from the database
+
+        :param file_hash: The hash of the file for which to retrieve the audio file ID
+        :return: The audio file ID if the hash is found in the database, or None if not found
+        """
+        try:
+            # Create a select statement to retrieve the audio_file_id by audio_hash
+            stmt = select(RequestHistory.audio_file_id).where(RequestHistory.audio_hash == file_hash)
+
+            # Execute the query using the AsyncSession's execute method
+            result = await self.cur_session.execute(stmt)
+
+            # Fetch the first result row
+            row = result.fetchone()
+
+            if row:
+                # If a matching record is found, return the associated audio file ID
+                return row[0]
         except Exception as e:
             await self.cur_session.rollback()
             raise e
